@@ -108,6 +108,7 @@ def mostrarEvolucion ( hist ):
 
 #########################################################################
 ################## DEFINICIÓN DEL MODELO BASENET ########################
+########################### EJERCICIO 1 #################################
 #########################################################################
 
 model = Sequential()
@@ -143,8 +144,8 @@ weights = model.get_weights()
 #########################################################################
 
 x_train, y_train, x_test, y_test = cargarImagenes()
-batch_size = 64
-epochs = 40
+batch_size = 32
+epochs = 10
 
 # HE CAMBIADO fit POR fit_generator
 historia = model.fit(x_train, y_train,
@@ -152,23 +153,21 @@ historia = model.fit(x_train, y_train,
           epochs=epochs,
           verbose=1,
           validation_data=(x_test, y_test))
-score = model.evaluate(x_test, y_test, verbose=0)
-print('Test loss:', score[0])
-print('Test accuracy:', score[1])
 
 #########################################################################
 ################ PREDICCIÓN SOBRE EL CONJUNTO DE TEST ###################
 #########################################################################
 
-y_pred = model.predict(x_test, batch_size=batch_size)
-precision = calcularAccuracy(y_test, y_pred)
-print('Test accuracy con función local:', precision)
+score = model.evaluate(x_test, y_test, verbose=0)
+print('Test loss:', score[0])
+print('Test accuracy:', score[1])
 
 #input('Intro. Mostrar gráfica sobre la precisión y pérdida del modelo')
 mostrarEvolucion(historia)
 
 #########################################################################
 ########################## MEJORA DEL MODELO ############################
+############################# EJERCICIO 2 ###############################
 #########################################################################
 
 #input('Intro. Continuar con ejercicio 2')
@@ -186,24 +185,27 @@ datagen_test = ImageDataGenerator(featurewise_center=True, featurewise_std_norma
 # Ajustamos a los datos de entrenamiento
 datagen.fit(x_train)
 datagen_test.fit(x_train)
-# Definimos tamanio de batch y num de épocas
-batch_size = 64
-epochs = 40
-model.fit_generator(datagen.flow(x_train ,y_train, batch_size = 32,subset ='training'),
+# Definimos tamaño de batch y num de épocas
+batch_size = 32
+epochs = 10
+model.fit_generator(datagen.flow(x_train ,y_train, batch_size = batch_size, subset = 'training'),
                     validation_data = datagen.flow(x_train, y_train ,batch_size = 32,subset ='validation'),
                     epochs = epochs,
-                    steps_per_epoch = int(x_train)*0.9/batch_size)
-score = model.evaluate(datagen_test.flow(x_test, y_test), verbose=0)
-print('Test loss:', score[0])
-print('Test accuracy:', score[1])
+                    steps_per_epoch = len(x_train)*0.9/batch_size,
+                    validation_steps = len(x_train )*0.1/batch_size)
+
 
 #########################################################################
 ################ PREDICCIÓN SOBRE EL CONJUNTO DE TEST ###################
 #########################################################################
 
 #input('Intro. Mostrar gráfica sobre la precisión y pérdida del modelo')
-mostrarEvolucion(historia)
 
+# CONTAR EN MEMORIA QUE USO EVALUATE EN VEZ DE PREDICT Y CALCULAR ACCURACY
+score = model.evaluate(datagen_test.flow(x_test, y_test), verbose=0)
+print('Test loss:', score[0])
+print('Test accuracy:', score[1])
+mostrarEvolucion(historia)
 
 
 
