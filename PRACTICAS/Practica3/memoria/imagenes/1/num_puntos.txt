@@ -1,0 +1,33 @@
+puntos en nivel 0: 1919
+(480, 640)
+puntos en nivel 0: 137
+puntos en nivel 1: 723
+(240, 320)
+puntos en nivel 1: 44
+puntos en nivel 2: 273
+(120, 160)
+puntos en nivel 2: 15
+puntos en nivel 3: 258
+(60, 80)
+puntos en nivel 3: 11
+puntos en nivel 4: 149
+(30, 40)
+puntos en nivel 4: 7
+5
+137
+puntos en nivel 0: 4549
+(480, 640)
+puntos en nivel 0: 275
+puntos en nivel 1: 1387
+(240, 320)
+puntos en nivel 1: 71
+puntos en nivel 2: 652
+(120, 160)
+puntos en nivel 2: 30
+puntos en nivel 3: 192
+(60, 80)
+puntos en nivel 3: 11
+puntos en nivel 4: 136
+(30, 40)
+puntos en nivel 4: 8
+5

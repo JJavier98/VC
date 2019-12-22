@@ -33,6 +33,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 
+###############################################################################
+# ------------------------- Funciones auxiliares ---------------------------- #
+###############################################################################
+
 def leer_imagen(path):
     im_color = cv2.imread(path)
     im_trabajar = cv2.imread(path, 0)
@@ -42,6 +46,7 @@ def leer_imagen(path):
 
 
 def plt_imshow(im, title = ''):
+    # Normalizamos imágenes a color
     if len(im.shape) == 3:
         im[:,:,0] = (im[:,:,0] - np.min(im[:,:,0])) / (np.max(im[:,:,0]) - np.min(im[:,:,0]))*255
         im[:,:,1] = (im[:,:,1] - np.min(im[:,:,1])) / (np.max(im[:,:,1]) - np.min(im[:,:,1]))*255
@@ -51,6 +56,7 @@ def plt_imshow(im, title = ''):
     else:
         im[:,:] = (im[:,:] - np.min(im[:,:])) / (np.max(im[:,:]) - np.min(im[:,:]))*255
 
+    # Pasamos la imagen a enteros sin signo [0,255]
     im = np.uint8(im)
 
     # Si la imagen es a color
@@ -135,6 +141,8 @@ def gradiente(im, kernel_size, borde = cv2.BORDER_DEFAULT):
 
 
 def pyramid(v_img):
+    # Construcción de una imagen que contiene los niveles de la pirámide Gaussiana
+    # Vamos concatenando las distintas octabas para que se muestren juntas en una sola imagen
     base = np.ones((v_img[0].shape[0], v_img[0].shape[1] + v_img[1].shape[1]))
     if(len(v_img[0].shape) == 3):
         base = np.ones((v_img[0].shape[0], v_img[0].shape[1] + v_img[1].shape[1], 3))
@@ -184,7 +192,15 @@ def GaussianPyramid(im, kernel_size = 7, sigma = 3):
     return v_imgs
 
 
-def sub_ejer1(path):
+###############################################################################
+# ------------------------- Funciones auxiliares ---------------------------- #
+###############################################################################
+
+def calculaKeyPoints(path):
+    """
+    
+    """
+
     # Tamaño del bloque para calcular los puntos de Harris
     BlockSize = 7
     #Lectura de imagen
@@ -225,6 +241,7 @@ def sub_ejer1(path):
         R = (Lambda1 * Lambda2)/(Lambda1 + Lambda2)
 
         # Mostramos el resultado antes del umbral
+        input('Mostrar puntos encontrados antes del umbral')
         plt_imshow(R, 'antes de umbral')
         plt.show()
         
@@ -242,9 +259,10 @@ def sub_ejer1(path):
             for k in range(R.shape[1]):
                 if(R[j][k] >= umbral):
                     inc += 1
-        print('puntos en nivel ' + str(i) + ': ' + str(inc))
+        print('puntos post-umbral en nivel ' + str(i) + ': ' + str(inc))
         
         # Mostramos después de aplicar el umbral
+        input('Mostrar puntos encontrados después del umbral')
         plt_imshow(R, 'después de umbral')
         plt.show()
         
@@ -253,7 +271,6 @@ def sub_ejer1(path):
         #for k in range(len(v_corner)):
         no_max = np.float32(np.zeros_like(R))
         level_indices = []
-        print(R.shape)
         for k in range(R.shape[0]):
             for j in range(R.shape[1]):
                 maxi = True
@@ -292,12 +309,24 @@ def sub_ejer1(path):
                     no_max[k][j] = main
                     level_indices.append((k,j))
 
+
+        # Contamos los puntos restantes tras supresión
+        inc = 0
+        for j in range(no_max.shape[0]):
+            for k in range(no_max.shape[1]):
+                if(no_max[j][k] > 0):
+                    inc += 1
+        print('puntos post-supresión en nivel ' + str(i) + ': ' + str(inc))
+
         # Normalizamos no_max
         no_max[:,:] = (no_max[:,:] - np.min(no_max[:,:])) / (np.max(no_max[:,:]) - np.min(no_max[:,:]))*255
+        # Guardamos las imágenes con los puntos máximos por niveles
         v_no_max.append(no_max)
+        # Guardamos los índices de los puntos máximos para evitar recorrer la matriz
         indices.append(level_indices)
 
         # Mostramos imágenes despues de suprimir no máximos
+        input('Mostrar puntos encontrados después de supresión de no máximos')
         plt_imshow(v_no_max[i], 'despues de supresion')
         plt.show()
         
@@ -329,10 +358,14 @@ def sub_ejer1(path):
             columna_real = np.int64(b*(2**i)) # coordenada de las filas
             # Creamos el KeyPoint
             kp = cv2.KeyPoint(columna_real, fila_real, escala, angulo)
+            # Guardamos el KeyPoint
             keypoints.append(kp)
+            # Guardamos el KP junto a sus coordenadas relativas y el nivel donde se encuentra
             kp_junto_relativas.append([i, a, b, kp])
 
+        # Guardamos el kp con datos relativos por niveles
         v_kp_junto_relativas.append(kp_junto_relativas)
+
     """
     APARTADO D - NO FUNCIONA
     # Creamos keypoint refinados
@@ -408,97 +441,137 @@ def sub_ejer1(path):
         refinados.append(kp_dif[i][1])
         no_refinados.append(kp_dif[i][0])
     """
-    print(len(v_kp_junto_relativas))
-    print(len(v_kp_junto_relativas[0]))
+
+    # Vamos a dibujar los Keypoints en los niveles donde fueron hallados
     for i in range(len(v_pyr_color)):
         local_kp = []
+        # Recorremos los keypoints junto a sus valores relativos al nivel
         for j in range(len(v_kp_junto_relativas[i])):
+            # Creamos el KP con las coordenadas relativas y lo almacenamos
             n_kp = cv2.KeyPoint(v_kp_junto_relativas[i][j][2], v_kp_junto_relativas[i][j][1], v_kp_junto_relativas[i][j][3].size, v_kp_junto_relativas[i][j][3].angle)
             local_kp.append(n_kp)
 
+        # Seleccionamos en nivel de la pirámide donde vamos a pintar
         kp_image = v_pyr_color[i]
+        # Pintamos los key points
         kp_image = cv2.drawKeypoints(np.uint8(v_pyr_color[i]), local_kp, v_pyr_color[i])
+        text = 'Mostrar keypoints del nivel ' + str(i)
+        input(text)
         plt_imshow(kp_image)
         plt.show()
     
+    # Por último dibujamos todos los KP en el nivel 0 (imagen original)
     kp_image = im_color
     kp_image = cv2.drawKeypoints(np.uint8(im_color), keypoints, im_color)
+    input('Mostrar TODOS los keypoints')
     plt_imshow(kp_image)
     plt.show()
 
 def ejer1():
-    sub_ejer1('imagenes/Yosemite1.jpg')
-    sub_ejer1('imagenes/Yosemite2.jpg')
+    """
+    Calcula los puntos de Harris en las dos imágenes de Yosemite.zip
+    Yosemite1.jpg y Yosemite1.jpg
+    Una vez calculados los muestra por pantalla por niveles de la pirámide
+    Gaussiana calculada a la imagen y, finalmente, 
+    muestra todos en la imagen original
+    """
+    calculaKeyPoints('imagenes/Yosemite1.jpg')
+    calculaKeyPoints('imagenes/Yosemite2.jpg')
 
 def ejer2():
-    im_color_1, im_tr_1 = leer_imagen('imagenes/yosemite_full/yosemite1.jpg')
-    im_color_2, im_tr_2 = leer_imagen('imagenes/yosemite_full/yosemite2.jpg')
-    #im_color_1, im_tr_1 = leer_imagen('imagenes/mosaico-1/mosaico002.jpg')
-    #im_color_2, im_tr_2 = leer_imagen('imagenes/mosaico-1/mosaico003.jpg')
+    """
+    Obtiene los desriptores AKAZE de las imagenes de yosemite
+    y muestra por pantalla los matches entre los keypoints encontrados
+    uniéndolos con líneas. Mostramos "sólo" 50 matches
+    ya que más estorban a la hora de observar la precisión
+    """
+    # Declaramos el path de todas las imágenes
+    imgs = ['imagenes/yosemite1.jpg', 'imagenes/yosemite2.jpg',
+            'imagenes/yosemite3.jpg', 'imagenes/yosemite4.jpg',
+            'imagenes/yosemite5.jpg', 'imagenes/yosemite6.jpg',
+            'imagenes/yosemite7.jpg']
 
-    akaze = cv2.AKAZE_create()
-    kp_1, desc1 = akaze.detectAndCompute(im_tr_1, None)
-    kp_2, desc2 = akaze.detectAndCompute(im_tr_2, None)
+    # Redorremos todas las imágenes para calcular los descriptores AKAZE por pares
+    for i in range(len(imgs)-1):
+        # Leemos las imgs
+        im_color_1, im_tr_1 = leer_imagen(imgs[i])
+        im_color_2, im_tr_2 = leer_imagen(imgs[i+1])
 
-    matcher = cv2.BFMatcher(cv2.DescriptorMatcher_BRUTEFORCE, crossCheck=True)
-    matches1 = matcher.match(desc1, desc2)
+        # Declaramos el descriptor
+        akaze = cv2.AKAZE_create()
+        # Calculamos los KeyPoints y los descriptores para cada imagen
+        kp_1, desc1 = akaze.detectAndCompute(im_tr_1, None)
+        kp_2, desc2 = akaze.detectAndCompute(im_tr_2, None)
 
-    matches1 = sorted(matches1, key = lambda x:x.distance)
-
-    random.shuffle(matches1)
-
-    img1 = cv2.drawMatches(np.uint8(im_color_1),kp_1,np.uint8(im_color_2),kp_2,matches1[:100],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    plt_imshow(img1)
-    plt.show()
+        # Declaramos un Matcher de fuerza bruta (el más cercano)
+        matcher = cv2.BFMatcher(cv2.DescriptorMatcher_BRUTEFORCE, crossCheck=True)
+        # Realizamos el match
+        matches1 = matcher.match(desc1, desc2)
+        # Ordenamos los matches por distancia
+        # Se emparejan con con el más cercano que no sea el mismo
+        # 2NN
+        matches1 = sorted(matches1, key = lambda x:x.distance)
+        # Mezclamos los resultados para mostrar matches aleatorios
+        random.shuffle(matches1)
+        # Mostramos estos matches por pantalla
+        img1 = cv2.drawMatches(np.uint8(im_color_1),kp_1,np.uint8(im_color_2),kp_2,matches1[:50],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        input('Mostrar enlaces encontrados entre ambas imágenes')
+        plt_imshow(img1)
+        plt.show()
 
 def ejer3(path1, path2):
+    """
+    Realizamos un mosaico de calidad con dos imágenes de 'mosaico'
+    de las que obtenemos los KeyPoints igual que en el ejercicio 2
+    """
+    # Leemos las imáges de mosaico
     im_color_src, im_gray_src = leer_imagen(path1)
     im_color_dst, im_gray_dst = leer_imagen(path2)
-    #im_color_3, im_gray_3 = leer_imagen('imagenes/mosaico-1/mosaico004.jpg')
 
+    # Declaramos el descriptor
     akaze = cv2.AKAZE_create()
+    # Calculamos los KeyPoints y los descriptores para cada imagen
     kp_src, desc1 = akaze.detectAndCompute(im_gray_src, None)
     kp_dst, desc2 = akaze.detectAndCompute(im_gray_dst, None)
-    #kp_3, desc3 = akaze.detectAndCompute(im_gray_3, None)
-
+    # Declaramos un Matcher de fuerza bruta (el más cercano)
     matcher = cv2.BFMatcher(cv2.DescriptorMatcher_BRUTEFORCE, crossCheck=True)
+    # Realizamos el match
     matches1 = matcher.match(desc1, desc2)
-    #matches2 = matcher.match(desc3, desc1)
-
+    # Ordenamos los matches por distancia
+    # Se emparejan con con el más cercano que no sea el mismo
+    # 2NN
     matches1 = sorted(matches1, key = lambda x:x.distance)
+    # Nos quedamos con tan solo los 30 primeros matches
+    # ya que son aquellos que tienen más calidad y son suficientes
+    # para calcular la homografía
     matches1 = matches1[:30]
-    #matches2 = sorted(matches2, key = lambda x:x.distance)
-    #matches2 = matches2[:30]
 
-    img1 = cv2.drawMatches(np.uint8(im_color_src),kp_src,np.uint8(im_color_dst),kp_dst,matches1[:100],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    #img2 = cv2.drawMatches(np.uint8(im_color_3),kp_3,np.uint8(im_color_src),kp_src,matches2[:100],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-
+    # Dibujamos en las imágenes del mosaico los matches encontrados (los 30 mejores)
+    img1 = cv2.drawMatches(np.uint8(im_color_src),kp_src,np.uint8(im_color_dst),kp_dst,matches1,None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    
+    # Formateamos los keypoints para pasarselos a la función de la homografía
     src_points = np.zeros((len(matches1), 2), dtype=np.float32)
     dst_points = np.zeros((len(matches1), 2), dtype=np.float32)
     for i, match in enumerate(matches1):
         src_points[i, :] = kp_src[match.queryIdx].pt
         dst_points[i, :] = kp_dst[match.trainIdx].pt
 
-    """
-    src_points_3 = np.zeros((len(matches2), 2), dtype=np.float32)
-    dst_points_2 = np.zeros((len(matches2), 2), dtype=np.float32)
-    for i, match in enumerate(matches2):
-        src_points_3[i, :] = kp_3[match.queryIdx].pt
-        dst_points_2[i, :] = kp_src[match.trainIdx].pt
-    """
-
+    # Calculamos la matrix homográfica
     H, mask = cv2.findHomography(src_points, dst_points, cv2.RANSAC, 5)
-    #H2, mask2 = cv2.findHomography(src_points_3, dst_points_2)
     
-    size = (int((im_color_dst.shape[1] + im_color_src.shape[1])*0.8), int((im_color_dst.shape[0]+im_color_src.shape[0])*0.8))
+    # Declaramos un tamaño para el canvas del mosaico
+    size = (400, 250)
+    # Calculamos el mosaico con warpPerspective
+    # Transporta la imagen a encajar al mosaico
     mosaico = cv2.warpPerspective(im_color_src, H, size, borderMode=cv2.BORDER_TRANSPARENT)
-    #cv2.warpPerspective(im_color_3, H@H2, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
+    # La imagen sobre la que se encaja se define en el (0,0) del mosaico
     mosaico[0:im_color_dst.shape[0], 0:im_color_dst.shape[1]] = im_color_dst
-    #mosaico2[0:im_color_src.shape[0], 0:im_color_src.shape[1]] = im_color_src
 
+    input('Mostrar matches entre imágenes')
     plt_imshow(img1)
     plt.show()
 
+    #input('Mostrar mosaico')
     plt_imshow(mosaico)
     plt.show()
 
@@ -506,6 +579,14 @@ def ejer3(path1, path2):
     return img1, mosaico
 
 def ejer4():
+    """
+    Como en la anterior, debemos hacer un mosaico encajando imágenes sobre otras
+    según nos indiquen sus KP y los matches que hay entre ellos
+    Como en el ejer3 empezamos por la priemra imagen que se posiciona
+    en la esquina superir izda
+    """
+
+    # Leemos todas las imágenes que formarán parte del mosaico
     im_color_1, im_gray_1 = leer_imagen('imagenes/mosaico-1/mosaico002.jpg')
     im_color_2, im_gray_2 = leer_imagen('imagenes/mosaico-1/mosaico003.jpg')
     im_color_3, im_gray_3 = leer_imagen('imagenes/mosaico-1/mosaico004.jpg')
@@ -517,53 +598,74 @@ def ejer4():
     im_color_9, im_gray_9 = leer_imagen('imagenes/mosaico-1/mosaico010.jpg')
     im_color_10, im_gray_10 = leer_imagen('imagenes/mosaico-1/mosaico011.jpg')
 
+    # dividimos las imágenes por color y escala de grises
     ims_color = [im_color_1, im_color_2, im_color_3, im_color_4, im_color_5, im_color_6, im_color_7, im_color_8, im_color_9, im_color_10]
     ims_gray = [im_gray_1, im_gray_2, im_gray_3, im_gray_4, im_gray_5, im_gray_6, im_gray_7, im_gray_8, im_gray_9, im_gray_10]
+    # definimos una lista de homografías
     H = []
 
+    # Declaramos un tamaño para el canvas donde irá el mosaico
     size = (1100, 550)
+    # inicializamos el mosaico a una imagen en negro
     mosaico = np.zeros(size, dtype=np.uint8)
-    
+    # Recorremos todas las imágenes por pares para calcular sus matches
     for i in range(len(ims_color)-1):
+        # Declaranos el descriptor
         akaze = cv2.AKAZE_create()
+        # Computamos los KeyPoints y los descriptores
         kp_src, desc1 = akaze.detectAndCompute(ims_gray[i+1], None)
         kp_dst, desc2 = akaze.detectAndCompute(ims_gray[i], None)
-
+        # Declaramos el Matcher
         matcher = cv2.BFMatcher(cv2.DescriptorMatcher_BRUTEFORCE, crossCheck=True)
+        # Calculamos los matches entre imágenes
         matches1 = matcher.match(desc1, desc2)
-
+        # Emparejamos cada match con su correspondiente según cercanía
         matches1 = sorted(matches1, key = lambda x:x.distance)
+        # Nos quedamos con los 100 mejores para realizar el mosaico
         matches1 = matches1[:100]
 
+        # Dibujamos en las imágenes los matches encontrados
         img1 = cv2.drawMatches(np.uint8(ims_color[i+1]),kp_src,np.uint8(ims_color[i]),kp_dst,matches1[:100],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        input('Mostrar matches entre imágenes')
         plt_imshow(img1)
         plt.show()
 
+        # Formateamos los KeyPoints para pasárselos a la homgrafía
         src_points = np.zeros((len(matches1), 2), dtype=np.float32)
         dst_points = np.zeros((len(matches1), 2), dtype=np.float32)
         for i, match in enumerate(matches1):
             src_points[i, :] = kp_src[match.queryIdx].pt
             dst_points[i, :] = kp_dst[match.trainIdx].pt
 
+        # Calcualmos la matriz de homografía
         h, mask = cv2.findHomography(src_points, dst_points, cv2.RANSAC, 5)
+        # La almacenamos
         H.append(h)
-        
+    
+    # Cogemos la primera homografía
     current_H = H[0]
     for i in range(len(ims_color)-1):
+        # Si no es la primera imagen
         if(i != 0):
+            # Calculamos la homografía correspondiende como composición de la homografía
+            # de la imagen anterior y la actual
             current_H = current_H@H[i]
+            # Pintamos la imagen actual en el mosaico (canvas) según nos marca la homografía
             cv2.warpPerspective(ims_color[i+1], current_H, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
+        # Si es la primera imagen
         else:
+            # Calculamos el mosaico pintando la primera (segunda) imagen sobre él
             mosaico = cv2.warpPerspective(ims_color[i+1], current_H, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
 
+    # la primera imagen (inicial) se pinta en el (0,0) del mosaico
     mosaico[0:ims_color[0].shape[0], 0:ims_color[0].shape[1]] = ims_color[0]
 
-
+    input('Mostrar mosaico con Todas las imágenes')
     plt_imshow(mosaico)
     plt.show()
 
 
-ejer1()
-ejer2()
-ejer3('imagenes/mosaico-1/mosaico003.jpg', 'imagenes/mosaico-1/mosaico002.jpg')
+#ejer1()
+#ejer2()
+#ejer3('imagenes/mosaico003.jpg', 'imagenes/mosaico002.jpg')
 ejer4()
