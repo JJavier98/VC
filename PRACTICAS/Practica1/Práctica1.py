@@ -100,7 +100,7 @@ def Gaussiana2D(im, kernel_size, sigma, borde):
 # Obtenemos los kernels de ambos ejes y los multiplicamos matricialmente para obtener una máscara 2D la cual tendremos que voltear en ambos ejes para que al aplicarla realicemos una convolución. Tras esto aplicamos estas máscaras por separado obteniendo dos imágenes una con un resalto de bordes en el eje horizontal y otra en el vertical.
 
 
-def gradiente(im, kernel_size, borde):
+def gradiente(im, kernel_size, borde = cv2.BORDER_DEFAULT):
 
     kx = cv2.getDerivKernels(1, 0, kernel_size, normalize=True) # kernel para derivar + kernel para suavizar en x
     ky = cv2.getDerivKernels(0, 1, kernel_size, normalize=True) # kernel para suavizar + kernel para derivar en y
