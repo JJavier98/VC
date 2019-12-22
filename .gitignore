@@ -7,6 +7,7 @@ __pycache__/
 *.so
 
 PRACTICAS/Practica3/imagenes/
+PRACTICAS/Practica2/images/
 
 # Distribution / packaging
 .Python

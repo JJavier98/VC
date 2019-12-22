@@ -31,6 +31,7 @@ import sys
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 
 def leer_imagen(path):
     im_color = cv2.imread(path)
@@ -429,6 +430,55 @@ def ejer1():
     sub_ejer1('imagenes/Yosemite1.jpg')
     sub_ejer1('imagenes/Yosemite2.jpg')
 
-#def ejer2():
+def ejer2():
+    #im_color_1, im_tr_1 = leer_imagen('imagenes/Tablero1.jpg')
+    #im_color_2, im_tr_2 = leer_imagen('imagenes/Tablero2.jpg')
+    im_color_1, im_tr_1 = leer_imagen('imagenes/yosemite_full/yosemite1.jpg')
+    im_color_2, im_tr_2 = leer_imagen('imagenes/yosemite_full/yosemite2.jpg')
+    """
+    im_color_3, im_tr_3 = leer_imagen('imagenes/yosemite_full/yosemite3.jpg')
+    im_color_4, im_tr_4 = leer_imagen('imagenes/yosemite_full/yosemite4.jpg')
+    im_color_5, im_tr_5 = leer_imagen('imagenes/yosemite_full/yosemite5.jpg')
+    im_color_6, im_tr_6 = leer_imagen('imagenes/yosemite_full/yosemite6.jpg')
+    im_color_7, im_tr_7 = leer_imagen('imagenes/yosemite_full/yosemite7.jpg')
+    """
 
-ejer1()
+    akaze = cv2.AKAZE_create()
+    kpts1, desc1 = akaze.detectAndCompute(im_tr_1, None)
+    kpts2, desc2 = akaze.detectAndCompute(im_tr_2, None)
+    """
+    kpts3, desc3 = akaze.detectAndCompute(im_tr_3, None)
+    kpts4, desc4 = akaze.detectAndCompute(im_tr_4, None)
+    kpts5, desc5 = akaze.detectAndCompute(im_tr_5, None)
+    kpts6, desc6 = akaze.detectAndCompute(im_tr_6, None)
+    kpts7, desc7 = akaze.detectAndCompute(im_tr_7, None)
+    """
+
+    matcher = cv2.BFMatcher(cv2.DescriptorMatcher_BRUTEFORCE, crossCheck=True)
+    matches1 = matcher.match(desc1, desc2)
+    """
+    matches2 = matcher.match(desc2, desc3)
+    matches3 = matcher.match(desc3, desc4)
+    matches4 = matcher.match(desc4, desc5)
+    matches5 = matcher.match(desc5, desc6)
+    matches6 = matcher.match(desc6, desc7)
+    """
+
+    matches1 = sorted(matches1, key = lambda x:x.distance)
+    """
+    matches2 = sorted(matches2, key = lambda x:x.distance)
+    matches3 = sorted(matches3, key = lambda x:x.distance)
+    matches4 = sorted(matches4, key = lambda x:x.distance)
+    matches5 = sorted(matches5, key = lambda x:x.distance)
+    matches6 = sorted(matches6, key = lambda x:x.distance)
+    """
+
+    random.shuffle(matches1)
+
+    img1 = cv2.drawMatches(np.uint8(im_color_1),kpts1,np.uint8(im_color_2),kpts2,matches1[:20],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    plt_imshow(img1)
+    plt.show()
+
+
+#ejer1()
+ejer2()
