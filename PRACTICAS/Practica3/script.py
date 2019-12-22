@@ -431,54 +431,143 @@ def ejer1():
     sub_ejer1('imagenes/Yosemite2.jpg')
 
 def ejer2():
-    #im_color_1, im_tr_1 = leer_imagen('imagenes/Tablero1.jpg')
-    #im_color_2, im_tr_2 = leer_imagen('imagenes/Tablero2.jpg')
     im_color_1, im_tr_1 = leer_imagen('imagenes/yosemite_full/yosemite1.jpg')
     im_color_2, im_tr_2 = leer_imagen('imagenes/yosemite_full/yosemite2.jpg')
-    """
-    im_color_3, im_tr_3 = leer_imagen('imagenes/yosemite_full/yosemite3.jpg')
-    im_color_4, im_tr_4 = leer_imagen('imagenes/yosemite_full/yosemite4.jpg')
-    im_color_5, im_tr_5 = leer_imagen('imagenes/yosemite_full/yosemite5.jpg')
-    im_color_6, im_tr_6 = leer_imagen('imagenes/yosemite_full/yosemite6.jpg')
-    im_color_7, im_tr_7 = leer_imagen('imagenes/yosemite_full/yosemite7.jpg')
-    """
+    #im_color_1, im_tr_1 = leer_imagen('imagenes/mosaico-1/mosaico002.jpg')
+    #im_color_2, im_tr_2 = leer_imagen('imagenes/mosaico-1/mosaico003.jpg')
 
     akaze = cv2.AKAZE_create()
-    kpts1, desc1 = akaze.detectAndCompute(im_tr_1, None)
-    kpts2, desc2 = akaze.detectAndCompute(im_tr_2, None)
-    """
-    kpts3, desc3 = akaze.detectAndCompute(im_tr_3, None)
-    kpts4, desc4 = akaze.detectAndCompute(im_tr_4, None)
-    kpts5, desc5 = akaze.detectAndCompute(im_tr_5, None)
-    kpts6, desc6 = akaze.detectAndCompute(im_tr_6, None)
-    kpts7, desc7 = akaze.detectAndCompute(im_tr_7, None)
-    """
+    kp_1, desc1 = akaze.detectAndCompute(im_tr_1, None)
+    kp_2, desc2 = akaze.detectAndCompute(im_tr_2, None)
 
     matcher = cv2.BFMatcher(cv2.DescriptorMatcher_BRUTEFORCE, crossCheck=True)
     matches1 = matcher.match(desc1, desc2)
-    """
-    matches2 = matcher.match(desc2, desc3)
-    matches3 = matcher.match(desc3, desc4)
-    matches4 = matcher.match(desc4, desc5)
-    matches5 = matcher.match(desc5, desc6)
-    matches6 = matcher.match(desc6, desc7)
-    """
 
     matches1 = sorted(matches1, key = lambda x:x.distance)
-    """
-    matches2 = sorted(matches2, key = lambda x:x.distance)
-    matches3 = sorted(matches3, key = lambda x:x.distance)
-    matches4 = sorted(matches4, key = lambda x:x.distance)
-    matches5 = sorted(matches5, key = lambda x:x.distance)
-    matches6 = sorted(matches6, key = lambda x:x.distance)
-    """
 
     random.shuffle(matches1)
 
-    img1 = cv2.drawMatches(np.uint8(im_color_1),kpts1,np.uint8(im_color_2),kpts2,matches1[:20],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    img1 = cv2.drawMatches(np.uint8(im_color_1),kp_1,np.uint8(im_color_2),kp_2,matches1[:100],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     plt_imshow(img1)
+    plt.show()
+
+def ejer3(path1, path2):
+    im_color_src, im_gray_src = leer_imagen(path1)
+    im_color_dst, im_gray_dst = leer_imagen(path2)
+    #im_color_3, im_gray_3 = leer_imagen('imagenes/mosaico-1/mosaico004.jpg')
+
+    akaze = cv2.AKAZE_create()
+    kp_src, desc1 = akaze.detectAndCompute(im_gray_src, None)
+    kp_dst, desc2 = akaze.detectAndCompute(im_gray_dst, None)
+    #kp_3, desc3 = akaze.detectAndCompute(im_gray_3, None)
+
+    matcher = cv2.BFMatcher(cv2.DescriptorMatcher_BRUTEFORCE, crossCheck=True)
+    matches1 = matcher.match(desc1, desc2)
+    #matches2 = matcher.match(desc3, desc1)
+
+    matches1 = sorted(matches1, key = lambda x:x.distance)
+    matches1 = matches1[:30]
+    #matches2 = sorted(matches2, key = lambda x:x.distance)
+    #matches2 = matches2[:30]
+
+    img1 = cv2.drawMatches(np.uint8(im_color_src),kp_src,np.uint8(im_color_dst),kp_dst,matches1[:100],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    #img2 = cv2.drawMatches(np.uint8(im_color_3),kp_3,np.uint8(im_color_src),kp_src,matches2[:100],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+
+    src_points = np.zeros((len(matches1), 2), dtype=np.float32)
+    dst_points = np.zeros((len(matches1), 2), dtype=np.float32)
+    for i, match in enumerate(matches1):
+        src_points[i, :] = kp_src[match.queryIdx].pt
+        dst_points[i, :] = kp_dst[match.trainIdx].pt
+
+    """
+    src_points_3 = np.zeros((len(matches2), 2), dtype=np.float32)
+    dst_points_2 = np.zeros((len(matches2), 2), dtype=np.float32)
+    for i, match in enumerate(matches2):
+        src_points_3[i, :] = kp_3[match.queryIdx].pt
+        dst_points_2[i, :] = kp_src[match.trainIdx].pt
+    """
+
+    H, mask = cv2.findHomography(src_points, dst_points, cv2.RANSAC, 5)
+    #H2, mask2 = cv2.findHomography(src_points_3, dst_points_2)
+    
+    size = (int((im_color_dst.shape[1] + im_color_src.shape[1])*0.8), int((im_color_dst.shape[0]+im_color_src.shape[0])*0.8))
+    mosaico = cv2.warpPerspective(im_color_src, H, size, borderMode=cv2.BORDER_TRANSPARENT)
+    #cv2.warpPerspective(im_color_3, H@H2, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
+    mosaico[0:im_color_dst.shape[0], 0:im_color_dst.shape[1]] = im_color_dst
+    #mosaico2[0:im_color_src.shape[0], 0:im_color_src.shape[1]] = im_color_src
+
+    plt_imshow(img1)
+    plt.show()
+
+    plt_imshow(mosaico)
+    plt.show()
+
+    # imagenes con matches, imágenes superpuestas
+    return img1, mosaico
+
+def ejer4():
+    im_color_1, im_gray_1 = leer_imagen('imagenes/mosaico-1/mosaico002.jpg')
+    im_color_2, im_gray_2 = leer_imagen('imagenes/mosaico-1/mosaico003.jpg')
+    im_color_3, im_gray_3 = leer_imagen('imagenes/mosaico-1/mosaico004.jpg')
+    im_color_4, im_gray_4 = leer_imagen('imagenes/mosaico-1/mosaico005.jpg')
+    im_color_5, im_gray_5 = leer_imagen('imagenes/mosaico-1/mosaico006.jpg')
+    im_color_6, im_gray_6 = leer_imagen('imagenes/mosaico-1/mosaico007.jpg')
+    im_color_7, im_gray_7 = leer_imagen('imagenes/mosaico-1/mosaico008.jpg')
+    im_color_8, im_gray_8 = leer_imagen('imagenes/mosaico-1/mosaico009.jpg')
+    im_color_9, im_gray_9 = leer_imagen('imagenes/mosaico-1/mosaico010.jpg')
+    im_color_10, im_gray_10 = leer_imagen('imagenes/mosaico-1/mosaico011.jpg')
+
+    ims_color = [im_color_1, im_color_2, im_color_3, im_color_4, im_color_5, im_color_6, im_color_7, im_color_8, im_color_9, im_color_10]
+    ims_gray = [im_gray_1, im_gray_2, im_gray_3, im_gray_4, im_gray_5, im_gray_6, im_gray_7, im_gray_8, im_gray_9, im_gray_10]
+    H = []
+
+    w = 0
+    for im in ims_color:
+        w += im.shape[1]
+
+    size = (1000, 1000)
+    mosaico = np.zeros(size, dtype=np.uint8)
+    for i in range(len(ims_color)-1):
+        akaze = cv2.AKAZE_create()
+        kp_src, desc1 = akaze.detectAndCompute(ims_gray[i+1], None)
+        kp_dst, desc2 = akaze.detectAndCompute(ims_gray[i], None)
+
+        matcher = cv2.BFMatcher(cv2.DescriptorMatcher_BRUTEFORCE, crossCheck=True)
+        matches1 = matcher.match(desc1, desc2)
+
+        matches1 = sorted(matches1, key = lambda x:x.distance)
+        matches1 = matches1[:100]
+
+        img1 = cv2.drawMatches(np.uint8(ims_color[i+1]),kp_src,np.uint8(ims_color[i]),kp_dst,matches1[:100],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        plt_imshow(img1)
+        plt.show()
+
+        src_points = np.zeros((len(matches1), 2), dtype=np.float32)
+        dst_points = np.zeros((len(matches1), 2), dtype=np.float32)
+        for i, match in enumerate(matches1):
+            src_points[i, :] = kp_src[match.queryIdx].pt
+            dst_points[i, :] = kp_dst[match.trainIdx].pt
+
+        h, mask = cv2.findHomography(src_points, dst_points, cv2.RANSAC, 5)
+        H.append(h)
+        
+    #curernt_H = np.array([[1, 0, 500], [0, 1, 300], [0, 0, 1]], dtype=np.float64)
+    curernt_H = H[0]
+    for i in range(len(ims_color)-1):
+        if(i != 0):
+            curernt_H = curernt_H@H[i]
+            cv2.warpPerspective(ims_color[i+1], curernt_H, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
+        else:
+            mosaico = cv2.warpPerspective(ims_color[i+1], curernt_H, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
+
+    mosaico[0:ims_color[0].shape[0], 0:ims_color[0].shape[1]] = ims_color[0]
+
+
+    plt_imshow(mosaico)
     plt.show()
 
 
 #ejer1()
-ejer2()
+#ejer2()
+ejer3('imagenes/mosaico-1/mosaico003.jpg', 'imagenes/mosaico-1/mosaico002.jpg')
+ejer4()
