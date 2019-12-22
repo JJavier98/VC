@@ -521,12 +521,9 @@ def ejer4():
     ims_gray = [im_gray_1, im_gray_2, im_gray_3, im_gray_4, im_gray_5, im_gray_6, im_gray_7, im_gray_8, im_gray_9, im_gray_10]
     H = []
 
-    w = 0
-    for im in ims_color:
-        w += im.shape[1]
-
-    size = (1000, 1000)
+    size = (1100, 550)
     mosaico = np.zeros(size, dtype=np.uint8)
+    
     for i in range(len(ims_color)-1):
         akaze = cv2.AKAZE_create()
         kp_src, desc1 = akaze.detectAndCompute(ims_gray[i+1], None)
@@ -551,14 +548,13 @@ def ejer4():
         h, mask = cv2.findHomography(src_points, dst_points, cv2.RANSAC, 5)
         H.append(h)
         
-    #curernt_H = np.array([[1, 0, 500], [0, 1, 300], [0, 0, 1]], dtype=np.float64)
-    curernt_H = H[0]
+    current_H = H[0]
     for i in range(len(ims_color)-1):
         if(i != 0):
-            curernt_H = curernt_H@H[i]
-            cv2.warpPerspective(ims_color[i+1], curernt_H, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
+            current_H = current_H@H[i]
+            cv2.warpPerspective(ims_color[i+1], current_H, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
         else:
-            mosaico = cv2.warpPerspective(ims_color[i+1], curernt_H, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
+            mosaico = cv2.warpPerspective(ims_color[i+1], current_H, size, dst=mosaico, borderMode=cv2.BORDER_TRANSPARENT)
 
     mosaico[0:ims_color[0].shape[0], 0:ims_color[0].shape[1]] = ims_color[0]
 
@@ -567,7 +563,7 @@ def ejer4():
     plt.show()
 
 
-#ejer1()
-#ejer2()
+ejer1()
+ejer2()
 ejer3('imagenes/mosaico-1/mosaico003.jpg', 'imagenes/mosaico-1/mosaico002.jpg')
 ejer4()
