@@ -35,7 +35,8 @@ Todo esto nos sirve para generalizar enunciados geométricos y facilitar el trat
 # Ejercicio 4
 **¿Qué propiedades de la geometría de un plano quedan invariantes cuando se toma una foto de él? Justificar la respuesta.**
 
-Las propiedades de un plano en transformaciones lineales son:
+Las propiedades de un plano en transformaciones lineales son:  
+
 - El origen se asigna a un origen
 - Las líneas se asignas a líneas
 - Las líneas paralelas se mantienen paralelas
@@ -49,7 +50,7 @@ Podemos ver más sobre el tema en:
 [Camera geometry and image alignment - Josef Sivic](http://www.ens-lyon.fr/LIP/Arenaire/ERVision/camera_geometry_alignment_final.pdf)
 
 # Ejercicio 5
-**En  coordenadas  homogéneas  los  puntos y  rectas  del  plano  se representan  por  vectores  de  tres  coordenadas(notados  x  y  l respectivamente), de manera que si una recta contiene a un punto se verifica la ecuación $x^Tl=0$, es decir $\left(x_{1}, x_{2}, x_{3}\right)\left(\begin{array}{l}{a} \\{b} \\{c}\end{array}\right)=0$. Considere una homografía H que transforma vectores de puntos, $x'=H𝑥$. Dado que una homografía transforma vectores de tres coordenadas también existen homografías G para transformar vectores de rectas $𝑙'=G𝑙$. Suponga una recta l y un punto x que verifican $x^Tl=0$ en el plano proyectivo y suponga  que  conoce  una  homografía  H  que transforma vectores  de puntos. En estas condiciones ¿cuál es la homografía G que transforma los vectores de las rectas? Deducirla matemáticamente.**
+**En  coordenadas  homogéneas  los  puntos y  rectas  del  plano  se representan  por  vectores  de  tres  coordenadas(notados  x  y  l respectivamente), de manera que si una recta contiene a un punto se verifica la ecuación $x^Tl=0$, es decir $\left(x_{1}, x_{2}, x_{3}\right)\left(\begin{array}{l}{a} \\{b} \\{c}\end{array}\right)=0$. Considere una homografía H que transforma vectores de puntos, $x'=Hx$. Dado que una homografía transforma vectores de tres coordenadas también existen homografías G para transformar vectores de rectas $l'=Gl$. Suponga una recta l y un punto x que verifican $x^Tl=0$ en el plano proyectivo y suponga  que  conoce  una  homografía  H  que transforma vectores  de puntos. En estas condiciones ¿cuál es la homografía G que transforma los vectores de las rectas? Deducirla matemáticamente.**
 
 # Ejercicio 6
 **¿Cuál es el mínimo número de escalares necesarios para fijar una homografía general? ¿Y si la homografía es afín? Justificar la respuesta**
@@ -173,9 +174,9 @@ Respecto a la solución de estos inconvenientes trataremos sólo el de la intens
 
 
 # Ejercicio 12
-**Describa un par de criterios que sirvan para seleccionar parejas de puntos en correspondencias (“matching”) a partir de descriptores de regiones extraídos de dos imágenes. ¿Por qué no es posible garantizar que todas las parejas son correctas?**
+**Describa un par de criterios que sirvan para seleccionar parejas de puntos en correspondencias ("matching") a partir de descriptores de regiones extraídos de dos imágenes. ¿Por qué no es posible garantizar que todas las parejas son correctas?**
 
-**Fuerza bruta**: Este método calcula la distancia entre el descriptor origen y los descriptores de la imagen destino y selecciona el match más cercano (según su distancia Euclı́dea). Su ventaja es su gran simpleza, y como inconveniente tenemos su poca precisión: en casos donde se puedan encontrar objetos parecidos en las imágenes, puede errar en los matches como por ejemplo en una imagen de una valla. Podemos mejorar este método aplicando un umbral de manera que escoja el match que le correspondería solo si este multiplicado por el umbral da una distancia menor que el siguiente match más cercano.
+**Fuerza bruta**: Este método calcula la distancia entre el descriptor origen y los descriptores de la imagen destino y selecciona el match más cercano (según la distancia euclídea). Su ventaja es su gran simpleza, y como inconveniente tenemos su poca precisión: en casos donde se puedan encontrar objetos parecidos en las imágenes, puede errar en los matches como por ejemplo en una imagen de una valla. Podemos mejorar este método aplicando un umbral de manera que escoja el match que le correspondería solo si este multiplicado por el umbral da una distancia menor que el siguiente match más cercano.
 
 **HAMMING**: Este método se usa en aquellos casos en los que medimos la distancia entre datos binarios. Este criterio se usa por ejemplo en los descriptores ORB, BRIEF o BRISK. Esta distancia cuenta el número de dígitos binarios distintos entre descriptores.
 
@@ -184,7 +185,7 @@ No es posible garantizar que todas las parejas serán correctas ya que es más q
 # Ejercicio 13
 **Cual es el objetivo principal del uso de la técnica RANSAC en el cálculo de una homografía. Justificar la respuesta**
 
-El objetivo es desechar los puntos que se alejan significativamente de la media de puntos observados (outliers) y realizar el ajuste únicamente con los puntos inliers (los que si corresponden con el valor esperado o uno cercano dentro de un umbral). Esto lo hace para hacer un ajuste con los puntos que se consideran realmente buenos y no con los puntos que pueden perjudicarnos a la hora de hacer el ajuste para calcular la homografı́a ya que los outliers alteran significativamente los resultados, sobretodo cuanto más alejados están de los inliers como vemos en la siguiente imagen:
+El objetivo es desechar los puntos que se alejan significativamente de la media de puntos observados (outliers) y realizar el ajuste únicamente con los puntos inliers (los que si corresponden con el valor esperado o uno cercano dentro de un umbral). Esto lo hace para hacer un ajuste con los puntos que se consideran realmente buenos y no con los puntos que pueden perjudicarnos a la hora de hacer el ajuste para calcular la homografía ya que los outliers alteran significativamente los resultados, sobretodo cuanto más alejados están de los inliers como vemos en la siguiente imagen:  
 
 ![](ransac.png)
 
@@ -204,4 +205,5 @@ Podemos evitar las deformaciones si tomamos las imágenes en el mismo plano. Por
 
 # Bibliografía
 
+[Ejercicio 2](https://es.wikipedia.org/wiki/Espacio_proyectivo)  
 [Ejercicio 4](http://www.ens-lyon.fr/LIP/Arenaire/ERVision/camera_geometry_alignment_final.pdf)
