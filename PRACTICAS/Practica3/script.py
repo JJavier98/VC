@@ -142,7 +142,7 @@ def gradiente(im, kernel_size, borde = cv2.BORDER_DEFAULT):
 
 def pyramid(v_img):
     # Construcción de una imagen que contiene los niveles de la pirámide Gaussiana
-    # Vamos concatenando las distintas octabas para que se muestren juntas en una sola imagen
+    # Vamos concatenando las distintas octavas para que se muestren juntas en una sola imagen
     base = np.ones((v_img[0].shape[0], v_img[0].shape[1] + v_img[1].shape[1]))
     if(len(v_img[0].shape) == 3):
         base = np.ones((v_img[0].shape[0], v_img[0].shape[1] + v_img[1].shape[1], 3))
@@ -196,11 +196,60 @@ def GaussianPyramid(im, kernel_size = 7, sigma = 3):
 # ------------------------- Funciones auxiliares ---------------------------- #
 ###############################################################################
 
+def supNoMax(R):
+    """
+    Realizamos la supresión de no máximos de la imagen R
+    y almacenamos el resultado en no_max
+    level_indices almacena los índices de los puntos máximos
+    """
+    no_max = np.float32(np.zeros_like(R))
+    level_indices = []
+    for k in range(R.shape[0]):
+        for j in range(R.shape[1]):
+            maxi = True
+            main = R[k][j]
+            
+            if (k-1) >= 0:
+                if R[k-1][j] >= main:
+                    maxi = False
+                if (j-1) >= 0:
+                    if R[k-1][j-1] >= main:
+                        maxi = False
+                if (j+1) < R.shape[1]:
+                    if R[k-1][j+1] >= main:
+                        maxi = False
+                        
+            if (k+1) < R.shape[0]:
+                if R[k+1][j] >= main:
+                    maxi = False
+                if (j-1) >= 0:
+                    if R[k+1][j-1] >= main:
+                        maxi = False
+                if (j+1) < R.shape[1]:
+                    if R[k+1][j+1] >= main:
+                        maxi = False
+                        
+            if (j-1) >= 0:
+                if R[k][j-1] >= main:
+                    maxi = False
+                        
+            if (j+1) < R.shape[1]:
+                if R[k][j+1] >= main:
+                    maxi = False
+            
+            # Si es máximo lo guardamos
+            if maxi:
+                no_max[k][j] = main
+                level_indices.append((k,j))
+
+    return no_max, level_indices
+    
+
 def calculaKeyPoints(path):
     """
-    
+    Calculamos los puntos de Harris para una imagen dada
+    en diferentes octavas
     """
-
     # Tamaño del bloque para calcular los puntos de Harris
     BlockSize = 7
     #Lectura de imagen
@@ -269,46 +318,7 @@ def calculaKeyPoints(path):
 
         # Realizamos la supresión de no máximos en un vecindario 3x3      
         #for k in range(len(v_corner)):
-        no_max = np.float32(np.zeros_like(R))
-        level_indices = []
-        for k in range(R.shape[0]):
-            for j in range(R.shape[1]):
-                maxi = True
-                main = R[k][j]
-                
-                if (k-1) >= 0:
-                    if R[k-1][j] >= main:
-                        maxi = False
-                    if (j-1) >= 0:
-                        if R[k-1][j-1] >= main:
-                            maxi = False
-                    if (j+1) < R.shape[1]:
-                        if R[k-1][j+1] >= main:
-                            maxi = False
-                            
-                if (k+1) < R.shape[0]:
-                    if R[k+1][j] >= main:
-                        maxi = False
-                    if (j-1) >= 0:
-                        if R[k+1][j-1] >= main:
-                            maxi = False
-                    if (j+1) < R.shape[1]:
-                        if R[k+1][j+1] >= main:
-                            maxi = False
-                            
-                if (j-1) >= 0:
-                    if R[k][j-1] >= main:
-                        maxi = False
-                            
-                if (j+1) < R.shape[1]:
-                    if R[k][j+1] >= main:
-                        maxi = False
-                
-                # Si es máximo lo guardamos
-                if maxi:
-                    no_max[k][j] = main
-                    level_indices.append((k,j))
-
+        no_max, level_indices = supNoMax(R)
 
         # Contamos los puntos restantes tras supresión
         inc = 0
@@ -467,6 +477,10 @@ def calculaKeyPoints(path):
     plt_imshow(kp_image)
     plt.show()
 
+###############################################################################
+# ------------------------------ Ejercicios --------------------------------- #
+###############################################################################
+
 def ejer1():
     """
     Calcula los puntos de Harris en las dos imágenes de Yosemite.zip
@@ -587,16 +601,16 @@ def ejer4():
     """
 
     # Leemos todas las imágenes que formarán parte del mosaico
-    im_color_1, im_gray_1 = leer_imagen('imagenes/mosaico-1/mosaico002.jpg')
-    im_color_2, im_gray_2 = leer_imagen('imagenes/mosaico-1/mosaico003.jpg')
-    im_color_3, im_gray_3 = leer_imagen('imagenes/mosaico-1/mosaico004.jpg')
-    im_color_4, im_gray_4 = leer_imagen('imagenes/mosaico-1/mosaico005.jpg')
-    im_color_5, im_gray_5 = leer_imagen('imagenes/mosaico-1/mosaico006.jpg')
-    im_color_6, im_gray_6 = leer_imagen('imagenes/mosaico-1/mosaico007.jpg')
-    im_color_7, im_gray_7 = leer_imagen('imagenes/mosaico-1/mosaico008.jpg')
-    im_color_8, im_gray_8 = leer_imagen('imagenes/mosaico-1/mosaico009.jpg')
-    im_color_9, im_gray_9 = leer_imagen('imagenes/mosaico-1/mosaico010.jpg')
-    im_color_10, im_gray_10 = leer_imagen('imagenes/mosaico-1/mosaico011.jpg')
+    im_color_1, im_gray_1 = leer_imagen('imagenes/mosaico002.jpg')
+    im_color_2, im_gray_2 = leer_imagen('imagenes/mosaico003.jpg')
+    im_color_3, im_gray_3 = leer_imagen('imagenes/mosaico004.jpg')
+    im_color_4, im_gray_4 = leer_imagen('imagenes/mosaico005.jpg')
+    im_color_5, im_gray_5 = leer_imagen('imagenes/mosaico006.jpg')
+    im_color_6, im_gray_6 = leer_imagen('imagenes/mosaico007.jpg')
+    im_color_7, im_gray_7 = leer_imagen('imagenes/mosaico008.jpg')
+    im_color_8, im_gray_8 = leer_imagen('imagenes/mosaico009.jpg')
+    im_color_9, im_gray_9 = leer_imagen('imagenes/mosaico010.jpg')
+    im_color_10, im_gray_10 = leer_imagen('imagenes/mosaico011.jpg')
 
     # dividimos las imágenes por color y escala de grises
     ims_color = [im_color_1, im_color_2, im_color_3, im_color_4, im_color_5, im_color_6, im_color_7, im_color_8, im_color_9, im_color_10]
